@@ -22,7 +22,7 @@ def lambda_handler(event, context):
         
         # Handle different message types
         if action == 'create_job':
-            # Create a new VTO job
+            # Create a new inpainting job
             try:
                 # Extract required parameters
                 model_id = body.get('model_id')
@@ -36,8 +36,8 @@ def lambda_handler(event, context):
                     }
                 else:
                     # Look up model and product in their respective DynamoDB tables
-                    models_table = dynamodb.Table(os.environ.get('MODELS_TABLE_NAME', 'vto-models'))
-                    products_table = dynamodb.Table(os.environ.get('PRODUCTS_TABLE_NAME', 'vto-products'))
+                    models_table = dynamodb.Table(os.environ.get('MODELS_TABLE_NAME', 'inpainting-models'))
+                    products_table = dynamodb.Table(os.environ.get('PRODUCTS_TABLE_NAME', 'inpainting-products'))
                     
                     model_picture_s3_url = None
                     product_picture_s3_url = None
@@ -98,10 +98,10 @@ def lambda_handler(event, context):
                                 'action': 'job_created',
                                 'jobId': job_id,
                                 'status': 'created',
-                                'message': 'VTO job created successfully. Processing will begin shortly.'
+                                'message': 'inpainting job created successfully. Processing will begin shortly.'
                             }
                             
-                            print(f"Created VTO job {job_id} for connection {connection_id}")
+                            print(f"Created inpainting job {job_id} for connection {connection_id}")
                             
                         except Exception as e:
                             response_message = {
@@ -119,7 +119,7 @@ def lambda_handler(event, context):
         elif action == 'get_products':
             # Get available products from catalog
             try:
-                products_table = dynamodb.Table(os.environ.get('PRODUCTS_TABLE_NAME', 'vto-products'))
+                products_table = dynamodb.Table(os.environ.get('PRODUCTS_TABLE_NAME', 'inpainting-products'))
                 
                 # Scan products table (in production, consider pagination)
                 products_response = products_table.scan()

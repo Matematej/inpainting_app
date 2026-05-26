@@ -1,6 +1,6 @@
-# ---- Dead Letter Queues ----
+# DLGs
 resource "aws_sqs_queue" "results_dlq" {
-  name                      = "vto-results-dlq"
+  name                      = "${var.project}-results-dlq"
   message_retention_seconds = 1209600 # 14 days
   sqs_managed_sse_enabled   = true
 }
@@ -21,7 +21,7 @@ resource "aws_sqs_queue_policy" "results_dlq" {
 }
 
 resource "aws_sqs_queue" "products_dlq" {
-  name                      = "vto-products-dlq"
+  name                      = "${var.project}-products-dlq"
   message_retention_seconds = 1209600
   sqs_managed_sse_enabled   = true
 }
@@ -41,9 +41,9 @@ resource "aws_sqs_queue_policy" "products_dlq" {
   })
 }
 
-# ---- Main Queues ----
+# Main Queues
 resource "aws_sqs_queue" "results" {
-  name                       = "vto-results-queue"
+  name                       = "${var.project}-results-queue"
   visibility_timeout_seconds = 360 # 6 minutes
   sqs_managed_sse_enabled    = true
 
@@ -64,7 +64,7 @@ resource "aws_sqs_queue_policy" "results" {
         Principal = { Service = "s3.amazonaws.com" }
         Action    = "sqs:SendMessage"
         Resource  = aws_sqs_queue.results.arn
-        Condition = { ArnLike = { "aws:SourceArn" = aws_s3_bucket.vto.arn } }
+        Condition = { ArnLike = { "aws:SourceArn" = aws_s3_bucket.inpainting.arn } }
       },
       {
         Sid       = "DenyNonSSL"
@@ -79,7 +79,7 @@ resource "aws_sqs_queue_policy" "results" {
 }
 
 resource "aws_sqs_queue" "products" {
-  name                       = "vto-products-queue"
+  name                       = "${var.project}-products-queue"
   visibility_timeout_seconds = 360
   sqs_managed_sse_enabled    = true
 
@@ -100,7 +100,7 @@ resource "aws_sqs_queue_policy" "products" {
         Principal = { Service = "s3.amazonaws.com" }
         Action    = "sqs:SendMessage"
         Resource  = aws_sqs_queue.products.arn
-        Condition = { ArnLike = { "aws:SourceArn" = aws_s3_bucket.vto.arn } }
+        Condition = { ArnLike = { "aws:SourceArn" = aws_s3_bucket.inpainting.arn } }
       },
       {
         Sid       = "DenyNonSSL"
@@ -115,7 +115,7 @@ resource "aws_sqs_queue_policy" "products" {
 }
 
 resource "aws_sqs_queue" "models" {
-  name                       = "vto-models-queue"
+  name                       = "${var.project}-models-queue"
   visibility_timeout_seconds = 360
   sqs_managed_sse_enabled    = true
 
@@ -137,7 +137,7 @@ resource "aws_sqs_queue_policy" "models" {
         Principal = { Service = "s3.amazonaws.com" }
         Action    = "sqs:SendMessage"
         Resource  = aws_sqs_queue.models.arn
-        Condition = { ArnLike = { "aws:SourceArn" = aws_s3_bucket.vto.arn } }
+        Condition = { ArnLike = { "aws:SourceArn" = aws_s3_bucket.inpainting.arn } }
       },
       {
         Sid       = "DenyNonSSL"

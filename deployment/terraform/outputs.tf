@@ -1,6 +1,6 @@
 output "bucket_name" {
   description = "S3 bucket name (upload models/ and products/ here)"
-  value       = aws_s3_bucket.vto.bucket
+  value       = aws_s3_bucket.inpainting.bucket
 }
 
 output "websocket_api_endpoint" {
@@ -40,7 +40,7 @@ output "models_table_name" {
 
 output "state_machine_arn" {
   description = "Step Functions state machine ARN"
-  value       = aws_sfn_state_machine.vto.arn
+  value       = aws_sfn_state_machine.inpainting.arn
 }
 
 output "results_queue_url" {

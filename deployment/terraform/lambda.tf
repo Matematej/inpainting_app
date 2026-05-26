@@ -1,4 +1,3 @@
-# ---- Lambda zip packages ----
 data "archive_file" "websocket_connect" {
   type        = "zip"
   source_dir  = "${path.module}/../lambdas/websocket-connect"
@@ -47,7 +46,7 @@ data "archive_file" "s3_models_handler" {
   output_path = "${path.module}/../lambdas/s3-models-handler.zip"
 }
 
-# ---- WebSocket Connect ----
+# WebSocket Connect
 resource "aws_lambda_function" "websocket_connect" {
   function_name    = "${var.project}-websocket-connect"
   filename         = data.archive_file.websocket_connect.output_path
@@ -73,7 +72,7 @@ resource "aws_lambda_permission" "apigw_connect" {
   source_arn    = "arn:aws:execute-api:${var.aws_region}:${data.aws_caller_identity.current.account_id}:${aws_apigatewayv2_api.websocket.id}/*/*"
 }
 
-# ---- WebSocket Disconnect ----
+# WebSocket Disconnect
 resource "aws_lambda_function" "websocket_disconnect" {
   function_name    = "${var.project}-websocket-disconnect"
   filename         = data.archive_file.websocket_disconnect.output_path
@@ -99,7 +98,7 @@ resource "aws_lambda_permission" "apigw_disconnect" {
   source_arn    = "arn:aws:execute-api:${var.aws_region}:${data.aws_caller_identity.current.account_id}:${aws_apigatewayv2_api.websocket.id}/*/*"
 }
 
-# ---- WebSocket Message ----
+# WebSocket Message
 resource "aws_lambda_function" "websocket_message" {
   function_name    = "${var.project}-websocket-message"
   filename         = data.archive_file.websocket_message.output_path
@@ -116,7 +115,7 @@ resource "aws_lambda_function" "websocket_message" {
       TABLE_NAME             = aws_dynamodb_table.jobs.name
       PRODUCTS_TABLE_NAME    = aws_dynamodb_table.products.name
       MODELS_TABLE_NAME      = aws_dynamodb_table.models.name
-      BUCKET_NAME            = aws_s3_bucket.vto.bucket
+      BUCKET_NAME            = aws_s3_bucket.inpainting.bucket
       WEBSOCKET_API_ENDPOINT = "wss://${aws_apigatewayv2_api.websocket.id}.execute-api.${var.aws_region}.amazonaws.com/prod"
     }
   }
@@ -130,7 +129,7 @@ resource "aws_lambda_permission" "apigw_message" {
   source_arn    = "arn:aws:execute-api:${var.aws_region}:${data.aws_caller_identity.current.account_id}:${aws_apigatewayv2_api.websocket.id}/*/*"
 }
 
-# ---- Canvas Processor (called by Step Functions) ----
+# Main funtion called by Step Functions that calls bedrock
 resource "aws_lambda_function" "canvas_processor" {
   function_name    = "${var.project}-canvas-processor"
   filename         = data.archive_file.canvas_processor.output_path
@@ -144,13 +143,13 @@ resource "aws_lambda_function" "canvas_processor" {
   environment {
     variables = {
       TABLE_NAME             = aws_dynamodb_table.jobs.name
-      BUCKET_NAME            = aws_s3_bucket.vto.bucket
+      BUCKET_NAME            = aws_s3_bucket.inpainting.bucket
       WEBSOCKET_API_ENDPOINT = "wss://${aws_apigatewayv2_api.websocket.id}.execute-api.${var.aws_region}.amazonaws.com/prod"
     }
   }
 }
 
-# ---- DynamoDB Stream Trigger ----
+# DynamoDB Stream Trigger
 resource "aws_lambda_function" "stream_trigger" {
   function_name    = "${var.project}-stream-trigger"
   filename         = data.archive_file.stream_trigger.output_path
@@ -163,7 +162,7 @@ resource "aws_lambda_function" "stream_trigger" {
 
   environment {
     variables = {
-      STATE_MACHINE_ARN = aws_sfn_state_machine.vto.arn
+      STATE_MACHINE_ARN = aws_sfn_state_machine.inpainting.arn
     }
   }
 }
@@ -178,7 +177,7 @@ resource "aws_lambda_event_source_mapping" "stream_trigger" {
   depends_on                    = [aws_iam_role_policy.stream_trigger]
 }
 
-# ---- S3 Result Handler ----
+# S3 Result Handler
 resource "aws_lambda_function" "s3_result_handler" {
   function_name    = "${var.project}-s3-result-handler"
   filename         = data.archive_file.s3_result_handler.output_path
@@ -205,7 +204,7 @@ resource "aws_lambda_event_source_mapping" "results_queue" {
   depends_on                         = [aws_iam_role_policy.s3_result_handler]
 }
 
-# ---- S3 Products Handler ----
+# S3 Products
 resource "aws_lambda_function" "s3_products_handler" {
   function_name    = "${var.project}-s3-products-handler"
   filename         = data.archive_file.s3_products_handler.output_path
@@ -231,7 +230,7 @@ resource "aws_lambda_event_source_mapping" "products_queue" {
   depends_on                         = [aws_iam_role_policy.s3_products_handler]
 }
 
-# ---- S3 Models Handler ----
+# S3 Models
 resource "aws_lambda_function" "s3_models_handler" {
   function_name    = "${var.project}-s3-models-handler"
   filename         = data.archive_file.s3_models_handler.output_path

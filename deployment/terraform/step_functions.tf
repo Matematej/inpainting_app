@@ -1,10 +1,10 @@
 resource "aws_cloudwatch_log_group" "step_functions" {
-  name              = "/aws/stepfunctions/vto-processing"
+  name              = "/aws/stepfunctions/${var.project}-processing"
   retention_in_days = 7
 }
 
-resource "aws_sfn_state_machine" "vto" {
-  name     = "vto-processing"
+resource "aws_sfn_state_machine" "inpainting" {
+  name     = "${var.project}-processing"
   role_arn = aws_iam_role.step_functions.arn
 
   # X-Ray tracing enabled
@@ -19,7 +19,7 @@ resource "aws_sfn_state_machine" "vto" {
   }
 
   definition = jsonencode({
-    Comment = "VTO processing state machine"
+    Comment = "INPAINTING processing state machine"
     StartAt = "ProcessCanvas"
     States = {
       ProcessCanvas = {

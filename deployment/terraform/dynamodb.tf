@@ -1,6 +1,6 @@
-# ---- Jobs Table (with DynamoDB Streams) ----
+# Jobs Table
 resource "aws_dynamodb_table" "jobs" {
-  name             = "vto-jobs"
+  name             = "${var.project}-jobs"
   billing_mode     = "PAY_PER_REQUEST"
   hash_key         = "id"
   stream_enabled   = true
@@ -18,9 +18,9 @@ resource "aws_dynamodb_table" "jobs" {
   tags = { Project = var.project }
 }
 
-# ---- WebSocket Connections Table ----
+# WebSocket Connections table
 resource "aws_dynamodb_table" "connections" {
-  name         = "vto-connections"
+  name         = "${var.project}-connections"
   billing_mode = "PAY_PER_REQUEST"
   hash_key     = "connection_id"
 
@@ -41,9 +41,9 @@ resource "aws_dynamodb_table" "connections" {
   tags = { Project = var.project }
 }
 
-# ---- Products Catalog Table ----
+# Products table
 resource "aws_dynamodb_table" "products" {
-  name         = "vto-products"
+  name         = "${var.project}-products"
   billing_mode = "PAY_PER_REQUEST"
   hash_key     = "product_id"
 
@@ -59,9 +59,9 @@ resource "aws_dynamodb_table" "products" {
   tags = { Project = var.project }
 }
 
-# ---- Models Catalog Table ----
+# Models table
 resource "aws_dynamodb_table" "models" {
-  name         = "vto-models"
+  name         = "${var.project}-models"
   billing_mode = "PAY_PER_REQUEST"
   hash_key     = "model_id"
 

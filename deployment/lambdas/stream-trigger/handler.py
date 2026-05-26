@@ -4,7 +4,7 @@ import os
 import time
 
 def lambda_handler(event, context):
-    """DynamoDB Stream trigger to start Step Functions for VTO jobs"""
+    """DynamoDB Stream trigger to start Step Functions for INPAINTING jobs"""
     print(f'DynamoDB Stream event: {json.dumps(event, default=str)}')
     stepfunctions = boto3.client('stepfunctions')
     
@@ -33,7 +33,7 @@ def lambda_handler(event, context):
                         
                         response = stepfunctions.start_execution(
                             stateMachineArn=os.environ['STATE_MACHINE_ARN'],
-                            name=f'vto-job-{job_id}-{int(time.time())}',
+                            name=f'inpainting-job-{job_id}-{int(time.time())}',
                             input=json.dumps(step_functions_input)
                         )
                         print(f'Step Functions started: {response["executionArn"]}')

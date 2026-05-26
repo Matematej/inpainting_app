@@ -1,17 +1,16 @@
-# ---- WebSocket API ----
+# WebSocket API
 resource "aws_apigatewayv2_api" "websocket" {
-  name                       = "vto-websocket-api"
+  name                       = "${var.project}-websocket-api"
   protocol_type              = "WEBSOCKET"
   route_selection_expression = "$request.body.action"
 }
 
-# ---- CloudWatch Log Group for WebSocket access logs ----
+# Log Group for WebSocket access logs
 resource "aws_cloudwatch_log_group" "websocket_access" {
-  name              = "/aws/apigateway/vto-websocket-access-logs"
+  name              = "/aws/apigateway/${var.project}-websocket-access-logs"
   retention_in_days = 30
 }
 
-# ---- Integrations ----
 resource "aws_apigatewayv2_integration" "connect" {
   api_id           = aws_apigatewayv2_api.websocket.id
   integration_type = "AWS_PROXY"
@@ -30,7 +29,7 @@ resource "aws_apigatewayv2_integration" "message" {
   integration_uri  = aws_lambda_function.websocket_message.invoke_arn
 }
 
-# ---- Routes ----
+# Routes
 # $connect requires API key authentication
 resource "aws_apigatewayv2_route" "connect" {
   api_id             = aws_apigatewayv2_api.websocket.id
@@ -51,7 +50,7 @@ resource "aws_apigatewayv2_route" "default" {
   target    = "integrations/${aws_apigatewayv2_integration.message.id}"
 }
 
-# ---- Stage ----
+# Stages
 resource "aws_apigatewayv2_stage" "prod" {
   api_id      = aws_apigatewayv2_api.websocket.id
   name        = "prod"
@@ -70,15 +69,14 @@ resource "aws_apigatewayv2_stage" "prod" {
   ]
 }
 
-# ---- API Key & Usage Plan (REST API v1 resources — WebSocket API keys use v1 plane) ----
-# Note: WebSocket API key support uses the REST API key infrastructure
+# API Key and Usage Plan
 resource "aws_api_gateway_api_key" "websocket" {
-  name    = "vto-websocket-api-key"
+  name    = "${var.project}-websocket-api-key"
   enabled = true
 }
 
 resource "aws_api_gateway_usage_plan" "websocket" {
-  name = "vto-websocket-usage-plan"
+  name = "${var.project}-websocket-usage-plan"
 
   api_stages {
     api_id = aws_apigatewayv2_api.websocket.id
@@ -99,9 +97,9 @@ resource "aws_api_gateway_usage_plan_key" "websocket" {
   usage_plan_id = aws_api_gateway_usage_plan.websocket.id
 }
 
-# ---- WAF Web ACL ----
+# WAF
 resource "aws_wafv2_web_acl" "websocket" {
-  name  = "VTO-WebSocket-Waf"
+  name  = "${var.project}-WebSocket-Waf"
   scope = "REGIONAL"
 
   default_action {
@@ -109,7 +107,7 @@ resource "aws_wafv2_web_acl" "websocket" {
   }
 
   rule {
-    name     = "VTO-AWSManagedRulesCommonRuleSet"
+    name     = "${var.project}-AWSManagedRulesCommonRuleSet"
     priority = 0
 
     override_action {
@@ -126,12 +124,12 @@ resource "aws_wafv2_web_acl" "websocket" {
     visibility_config {
       sampled_requests_enabled   = true
       cloudwatch_metrics_enabled = true
-      metric_name                = "VTO-AWSManagedRulesCommonRuleSet"
+      metric_name                = "${var.project}-AWSManagedRulesCommonRuleSet"
     }
   }
 
   rule {
-    name     = "VTO-RateLimitRule"
+    name     = "${var.project}-RateLimitRule"
     priority = 1
 
     action {
@@ -148,13 +146,13 @@ resource "aws_wafv2_web_acl" "websocket" {
     visibility_config {
       sampled_requests_enabled   = true
       cloudwatch_metrics_enabled = true
-      metric_name                = "VTO-RateLimitRule"
+      metric_name                = "${var.project}-RateLimitRule"
     }
   }
 
   visibility_config {
     sampled_requests_enabled   = true
     cloudwatch_metrics_enabled = true
-    metric_name                = "VTOWebSocketWebAcl"
+    metric_name                = "${var.project}WebSocketWebAcl"
   }
 }

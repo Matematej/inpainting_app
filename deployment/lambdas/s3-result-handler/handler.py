@@ -49,7 +49,7 @@ def process_error_notification(error_data):
                 'jobId': job_id,
                 'status': 'error',
                 'error': error_message,
-                'message': 'VTO processing failed'
+                'message': 'IMPAINTING processing failed'
             }
             
             send_websocket_message(connection_id, message)

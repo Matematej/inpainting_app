@@ -2,7 +2,7 @@ locals {
   websocket_api_arn = "arn:aws:execute-api:${var.aws_region}:${data.aws_caller_identity.current.account_id}:${aws_apigatewayv2_api.websocket.id}/*"
 }
 
-# ---- Shared Lambda Execution Role ----
+# Lambda Execution Role for all lambdas
 resource "aws_iam_role" "lambda_exec" {
   name = "${var.project}-lambda-exec-role"
   assume_role_policy = jsonencode({
@@ -61,7 +61,7 @@ resource "aws_iam_role_policy" "ws_message" {
       {
         Effect   = "Allow"
         Action   = ["s3:GetObject", "s3:HeadObject"]
-        Resource = "${aws_s3_bucket.vto.arn}/*"
+        Resource = "${aws_s3_bucket.inpainting.arn}/*"
       },
       {
         Effect   = "Allow"
@@ -87,7 +87,7 @@ resource "aws_iam_role_policy" "canvas_processor" {
       {
         Effect   = "Allow"
         Action   = ["s3:GetObject", "s3:PutObject", "s3:HeadObject"]
-        Resource = "${aws_s3_bucket.vto.arn}/*"
+        Resource = "${aws_s3_bucket.inpainting.arn}/*"
       },
       {
         Effect = "Allow"
@@ -135,7 +135,7 @@ resource "aws_iam_role_policy" "stream_trigger" {
       {
         Effect   = "Allow"
         Action   = ["states:StartExecution"]
-        Resource = aws_sfn_state_machine.vto.arn
+        Resource = aws_sfn_state_machine.inpainting.arn
       }
     ]
   })
@@ -156,7 +156,7 @@ resource "aws_iam_role_policy" "s3_result_handler" {
       {
         Effect   = "Allow"
         Action   = ["s3:GetObject", "s3:GeneratePresignedUrl"]
-        Resource = "${aws_s3_bucket.vto.arn}/*"
+        Resource = "${aws_s3_bucket.inpainting.arn}/*"
       },
       {
         Effect   = "Allow"
@@ -187,7 +187,7 @@ resource "aws_iam_role_policy" "s3_products_handler" {
       {
         Effect   = "Allow"
         Action   = ["s3:GetObject", "s3:HeadObject"]
-        Resource = "${aws_s3_bucket.vto.arn}/*"
+        Resource = "${aws_s3_bucket.inpainting.arn}/*"
       },
       {
         Effect   = "Allow"
@@ -213,7 +213,7 @@ resource "aws_iam_role_policy" "s3_models_handler" {
       {
         Effect   = "Allow"
         Action   = ["s3:GetObject", "s3:HeadObject"]
-        Resource = "${aws_s3_bucket.vto.arn}/*"
+        Resource = "${aws_s3_bucket.inpainting.arn}/*"
       },
       {
         Effect   = "Allow"
@@ -224,7 +224,7 @@ resource "aws_iam_role_policy" "s3_models_handler" {
   })
 }
 
-# ---- Step Functions Execution Role ----
+# Step Functions execution role 
 resource "aws_iam_role" "step_functions" {
   name = "${var.project}-stepfunctions-role"
   assume_role_policy = jsonencode({
@@ -281,7 +281,7 @@ resource "aws_iam_role_policy" "step_functions" {
   })
 }
 
-# ---- API Gateway CloudWatch Logs Role ----
+# API Gateway CloudWatch Logs Role
 resource "aws_iam_role" "apigw_logs" {
   name = "${var.project}-apigw-logs-role"
   assume_role_policy = jsonencode({
@@ -303,7 +303,7 @@ resource "aws_api_gateway_account" "main" {
   cloudwatch_role_arn = aws_iam_role.apigw_logs.arn
 }
 
-# ---- CloudTrail Role ----
+# CloudTrail Role
 resource "aws_iam_role" "cloudtrail" {
   name = "${var.project}-cloudtrail-role"
   assume_role_policy = jsonencode({

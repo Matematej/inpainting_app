@@ -1,6 +1,6 @@
-# ---- Access Logs Bucket ----
+# Access Logs
 resource "aws_s3_bucket" "access_logs" {
-  bucket        = "vto-access-logs-${data.aws_caller_identity.current.account_id}-${var.aws_region}"
+  bucket        = "${var.project}-access-logs-${data.aws_caller_identity.current.account_id}-${var.aws_region}"
   force_destroy = true
 }
 
@@ -50,21 +50,21 @@ resource "aws_s3_bucket_ownership_controls" "access_logs" {
   }
 }
 
-# ---- Main VTO Bucket ----
-resource "aws_s3_bucket" "vto" {
-  bucket        = "vto-demo-bucket-${data.aws_caller_identity.current.account_id}-${var.aws_region}"
+# Main INPAINTING Bucket
+resource "aws_s3_bucket" "inpainting" {
+  bucket        = "${var.project}-demo-bucket-${data.aws_caller_identity.current.account_id}-${var.aws_region}"
   force_destroy = true
 }
 
-resource "aws_s3_bucket_versioning" "vto" {
-  bucket = aws_s3_bucket.vto.id
+resource "aws_s3_bucket_versioning" "inpainting" {
+  bucket = aws_s3_bucket.inpainting.id
   versioning_configuration {
     status = "Enabled"
   }
 }
 
-resource "aws_s3_bucket_server_side_encryption_configuration" "vto" {
-  bucket = aws_s3_bucket.vto.id
+resource "aws_s3_bucket_server_side_encryption_configuration" "inpainting" {
+  bucket = aws_s3_bucket.inpainting.id
   rule {
     apply_server_side_encryption_by_default {
       sse_algorithm = "AES256"
@@ -72,23 +72,23 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "vto" {
   }
 }
 
-resource "aws_s3_bucket_public_access_block" "vto" {
-  bucket                  = aws_s3_bucket.vto.id
+resource "aws_s3_bucket_public_access_block" "inpainting" {
+  bucket                  = aws_s3_bucket.inpainting.id
   block_public_acls       = true
   block_public_policy     = true
   ignore_public_acls      = true
   restrict_public_buckets = true
 }
 
-resource "aws_s3_bucket_logging" "vto" {
-  bucket        = aws_s3_bucket.vto.id
+resource "aws_s3_bucket_logging" "inpainting" {
+  bucket        = aws_s3_bucket.inpainting.id
   target_bucket = aws_s3_bucket.access_logs.id
   target_prefix = "access-logs/"
   depends_on    = [aws_s3_bucket_acl.access_logs]
 }
 
-resource "aws_s3_bucket_cors_configuration" "vto" {
-  bucket = aws_s3_bucket.vto.id
+resource "aws_s3_bucket_cors_configuration" "inpainting" {
+  bucket = aws_s3_bucket.inpainting.id
   cors_rule {
     allowed_methods = ["GET", "POST", "PUT"]
     allowed_origins = ["*"]
@@ -97,8 +97,8 @@ resource "aws_s3_bucket_cors_configuration" "vto" {
   }
 }
 
-resource "aws_s3_bucket_policy" "vto_ssl" {
-  bucket = aws_s3_bucket.vto.id
+resource "aws_s3_bucket_policy" "inpainting_ssl" {
+  bucket = aws_s3_bucket.inpainting.id
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
@@ -106,15 +106,15 @@ resource "aws_s3_bucket_policy" "vto_ssl" {
       Effect    = "Deny"
       Principal = "*"
       Action    = "s3:*"
-      Resource  = ["${aws_s3_bucket.vto.arn}", "${aws_s3_bucket.vto.arn}/*"]
+      Resource  = ["${aws_s3_bucket.inpainting.arn}", "${aws_s3_bucket.inpainting.arn}/*"]
       Condition = { Bool = { "aws:SecureTransport" = "false" } }
     }]
   })
 }
 
-# ---- S3 → SQS Event Notifications ----
-resource "aws_s3_bucket_notification" "vto" {
-  bucket = aws_s3_bucket.vto.id
+# S3 to SQS Event Notifications
+resource "aws_s3_bucket_notification" "inpainting" {
+  bucket = aws_s3_bucket.inpainting.id
 
   queue {
     id            = "results-notification"
@@ -144,9 +144,9 @@ resource "aws_s3_bucket_notification" "vto" {
   ]
 }
 
-# ---- CloudTrail Bucket ----
+# CloudTrail
 resource "aws_s3_bucket" "cloudtrail" {
-  bucket        = "vto-cloudtrail-${data.aws_caller_identity.current.account_id}-${var.aws_region}"
+  bucket        = "${var.project}-cloudtrail-${data.aws_caller_identity.current.account_id}-${var.aws_region}"
   force_destroy = true
 }
 

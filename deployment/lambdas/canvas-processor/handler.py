@@ -45,7 +45,7 @@ def process_job(job_data):
 
     scene_b64 = get_s3_image_b64(bucket_name, scene_url)
 
-    # Stability inpaint request
+    # StabilityAI inpaint request
     # Docs: https://platform.stability.ai/docs/api-reference#tag/Edit/paths/~1v2beta~1stable-image~1edit~1inpaint/post
     request_body = {
         "prompt": prompt,
